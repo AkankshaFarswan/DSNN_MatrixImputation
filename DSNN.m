@@ -8,7 +8,7 @@ X_in = data;
 nr = row*col;
 %log-transform data using data_preprocessing if the range is too high
 X_input = data_preprocessing(X_in);
-parfor itr=1:1:10 
+parfor itr=1:1:10        %(Using parfor for parallel computation)
     val_itr = zeros(1,9);
     val_itr2 = zeros(1,9);
     [row,col]=size(X_input);
@@ -27,7 +27,9 @@ parfor itr=1:1:10
         X_reconstructed = idct2(reshape(z,row,col)); %Perform Inverse DCt transform on the output to get the imputed data matrix
         
         %Calculate NMSE after Stage-1
-        temp1 = norm(data_reverseprocess(X_reconstructed)-X_in,'fro');
+        %if data is log tranformed initially, use data_reversedataprocess() to convert back data to original values 
+        X_rec1 = data_reverseprocess(X_reconstructed);
+        temp1 = norm(X_rec1-X_in,'fro'); 
         val_itr(j) = (temp1/norm(X_in,'fro')).^2; 
         
         %Matrix from Stage-1 is considered a noisy version of original matrix.
@@ -71,7 +73,9 @@ parfor itr=1:1:10
         X_reconstructed2 = X;
         
         %Calculate NMSE after Stage-2
-        temp2 = norm(X_in - data_reverseprocess(X_reconstructed2),'fro');
+        %if data is log tranformed initially, use data_reversedataprocess() to convert back data to original values 
+        X_rec2 = data_reverseprocess(X_reconstructed2);
+        temp2 = norm(X_rec2-X_in,'fro');
         val_itr2(j) = (temp2/norm(X_in,'fro')).^2;
     end
     nmse1(itr,:) = val_itr;
