@@ -1,33 +1,37 @@
 clc;
 clear all;
 close all;
-load data.mat; % load data matrix where rows are samples and columns are genes
+% load data matrix where rows are samples and columns are genes
+load data.mat; 
 X_in = data;
 [row,col]=size(X_in);
 nr = row*col;
-X_input = data_preprocessing(X_in); %log-transform data if the range is too high
-parfor itr=1:1:10
+%log-transform data using data_preprocessing if the range is too high
+X_input = data_preprocessing(X_in);
+parfor itr=1:1:10 
     val_itr = zeros(1,9);
     val_itr2 = zeros(1,9);
     [row,col]=size(X_input);
     %Stage-1:Using compressive sensing to recover matrix from incomplete matrix
-    for j = 1:1:9 
+    for j = 1:1:9  % "j" determines the percentage of input observed 1 is for 10% observed input and 9 for 90% of observed input
         m = floor((j/10)*nr);
         rng('shuffle');
-        idx = randperm(nr,m);
-        op_phi =  opPCISampling(nr, idx);      
+        idx = randperm(nr,m);  % randomly chosing the indices for introducing missing values
+        op_phi =  opPCISampling(nr, idx);    %Creating phi object using the function opPCISampling  
         pts = spgSetParms('verbosity',0); 
         sigma = 0.000000001;
         tau = pi;
-        H = op_DCT(op_phi,row,col);
-        y = op_phi(X_input(:),1);
-        z = spg_bpdn(H, y,sigma, opts);
-        X_reconstructed = idct2(reshape(z,row,col)); 
+        H = op_DCT(op_phi,row,col);          %Creating DCT function handle using op_DCT function.
+        y = op_phi(X_input(:),1);            %Input incomplete vector "y" with randomly introduced missing values 
+        z = spg_bpdn(H, y,sigma, opts);      %Recovering complete matrix using "spgl" solver       
+        X_reconstructed = idct2(reshape(z,row,col)); %Perform Inverse DCt transform on the output to get the imputed data matrix
         
         %Calculate NMSE after Stage-1
         temp1 = norm(data_reverseprocess(X_reconstructed)-X_in,'fro');
         val_itr(j) = (temp1/norm(X_in,'fro')).^2; 
         
+        %Matrix from Stage-1 is considered a noisy version of original matrix.
+        %Therefore, denoising is done to remove noise from the output matrix recovered from Stage-1
         %Stage-2: Denoising
         X=X_reconstructed;
         Xobs = zeros(row,col);
@@ -35,6 +39,7 @@ parfor itr=1:1:10
         [row,col]=size(X);
         M1=zeros(row,col);
         M1((Xobs ~= 0))=1;  
+        %Checking for entries that are highly noisy and filling them with random entries.
         for c=1:col
             pivot=X(:,c);
             z=Xobs(Xobs(:,c)~=0,c);
@@ -69,7 +74,7 @@ parfor itr=1:1:10
         temp2 = norm(X_in - data_reverseprocess(X_reconstructed2),'fro');
         val_itr2(j) = (temp2/norm(X_in,'fro')).^2;
     end
-    nmse1(itr,2) = val_itr;
+    nmse1(itr,:) = val_itr;
     nmse2(itr,:) = val_itr2;
 end
 
