@@ -8,7 +8,8 @@ X_in = data;
 nr = row*col;
 %log-transform data using data_preprocessing if the range is too high
 X_input = data_preprocessing(X_in);
-parfor itr=1:1:10        %(Using parfor for parallel computation)
+itrn=30;
+parfor itr=1:1:itrn        %(Using parfor for parallel computation)
     val_itr = zeros(1,9);
     val_itr2 = zeros(1,9);
     [row,col]=size(X_input);
@@ -81,4 +82,9 @@ parfor itr=1:1:10        %(Using parfor for parallel computation)
     nmse1(itr,:) = val_itr;
     nmse2(itr,:) = val_itr2;
 end
+avg_nmse1 = mean(nmse1); %(Averaged NMSE after stage-1 over 30 iterations)
+avg_nmse2 = mean(nmse2); %(Averaged NMSE after stage-1 + stage-2 over 30 iterations)
+%Generate semilogy plot
+x=10:10:90
+semilogy(x,avg_nmse1,x,avg_nmse2)
 
