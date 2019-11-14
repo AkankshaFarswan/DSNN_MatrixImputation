@@ -1,6 +1,6 @@
-clc;
-clear all;
-close all;
+%clc;
+%clear all;
+%close all;
 % load data matrix where rows are samples and columns are genes
 load data.mat; 
 X_in = data;
