@@ -35,7 +35,7 @@ parfor itr=1:1:itrn        %(Using parfor for parallel computation)
         
         %Matrix from Stage-1 is considered a noisy version of original matrix.
         %Therefore, denoising is done to remove noise from the output matrix recovered from Stage-1
-        %Stage-2: Denoising
+        %Stage-2: Denoising using nuclear norm minimization
         X=X_reconstructed;
         Xobs = zeros(row,col);
         Xobs(idx)=X_input(idx);
